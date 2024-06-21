@@ -56,6 +56,8 @@ public class ImportBulkProcessor extends AbstractImportBatchProcessor {
 
   @Autowired private EventZeebeRecordProcessor eventZeebeRecordProcessor;
 
+  @Autowired private JobZeebeRecordProcessor jobZeebeRecordProcessor;
+
   @Autowired private SequenceFlowZeebeRecordProcessor sequenceFlowZeebeRecordProcessor;
 
   @Autowired private DecisionZeebeRecordProcessor decisionZeebeRecordProcessor;
@@ -217,13 +219,14 @@ public class ImportBulkProcessor extends AbstractImportBatchProcessor {
 
   private void processJobRecords(final BatchRequest batchRequest, final List<Record> zeebeRecords)
       throws PersistenceException {
-    // per activity
+    // per activity/flow-node
     final Map<Long, List<Record<JobRecordValue>>> groupedJobRecordsPerActivityInst =
         zeebeRecords.stream()
             .map(obj -> (Record<JobRecordValue>) obj)
             .collect(Collectors.groupingBy(obj -> obj.getValue().getElementInstanceKey()));
     listViewZeebeRecordProcessor.processJobRecords(groupedJobRecordsPerActivityInst, batchRequest);
     eventZeebeRecordProcessor.processJobRecords(groupedJobRecordsPerActivityInst, batchRequest);
+    jobZeebeRecordProcessor.processJobRecords(groupedJobRecordsPerActivityInst, batchRequest);
   }
 
   private void processProcessRecords(
