@@ -102,7 +102,7 @@ public class ListViewFlowNodeFromJobHandler
         "Update job state for flow node instance: id {} JobFailedWithRetriesLeft {}",
         entity.getId(),
         entity.isJobFailedWithRetriesLeft());
-    final Map<String, Object> updateFields = new HashMap<>();
+    final Map<String, Object> updateFields = new LinkedHashMap<>();
     updateFields.put(JOB_FAILED_WITH_RETRIES_LEFT, entity.isJobFailedWithRetriesLeft());
     updateFields.put(JOB_POSITION, entity.getPositionJob());
 

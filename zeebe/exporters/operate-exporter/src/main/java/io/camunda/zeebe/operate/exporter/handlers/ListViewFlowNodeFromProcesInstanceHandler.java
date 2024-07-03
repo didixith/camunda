@@ -25,10 +25,7 @@ import io.camunda.zeebe.protocol.record.Record;
 import io.camunda.zeebe.protocol.record.ValueType;
 import io.camunda.zeebe.protocol.record.value.BpmnElementType;
 import io.camunda.zeebe.protocol.record.value.ProcessInstanceRecordValue;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -130,7 +127,7 @@ public class ListViewFlowNodeFromProcesInstanceHandler
 
     LOGGER.debug("Flow node instance for list view: id {}", entity.getId());
 
-    final Map<String, Object> updateFields = new HashMap<>();
+    final Map<String, Object> updateFields = new LinkedHashMap<>();
     updateFields.put(POSITION, entity.getPosition());
     updateFields.put(ACTIVITY_ID, entity.getActivityId());
     updateFields.put(ACTIVITY_TYPE, entity.getActivityType());

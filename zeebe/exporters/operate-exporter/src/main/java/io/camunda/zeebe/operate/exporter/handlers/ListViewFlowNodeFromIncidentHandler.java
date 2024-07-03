@@ -21,8 +21,9 @@ import io.camunda.zeebe.protocol.record.Record;
 import io.camunda.zeebe.protocol.record.ValueType;
 import io.camunda.zeebe.protocol.record.intent.IncidentIntent;
 import io.camunda.zeebe.protocol.record.value.IncidentRecordValue;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -101,7 +102,7 @@ public class ListViewFlowNodeFromIncidentHandler
       throws PersistenceException {
 
     LOGGER.debug("Flow node instance for list view: id {}", entity.getId());
-    final var updateFields = new HashMap<String, Object>();
+    final Map<String, Object> updateFields = new LinkedHashMap<>();
     updateFields.put(ERROR_MSG, entity.getErrorMessage());
     updateFields.put(INCIDENT_POSITION, entity.getPositionIncident());
 
