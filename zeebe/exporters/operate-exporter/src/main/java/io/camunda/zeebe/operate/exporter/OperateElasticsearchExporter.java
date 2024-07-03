@@ -7,14 +7,16 @@
  */
 package io.camunda.zeebe.operate.exporter;
 
-import static io.camunda.zeebe.protocol.record.ValueType.PROCESS;
-import static io.camunda.zeebe.protocol.record.ValueType.PROCESS_INSTANCE;
-import static io.camunda.zeebe.protocol.record.ValueType.VARIABLE;
+import static io.camunda.zeebe.protocol.record.ValueType.*;
 
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
 import co.elastic.clients.elasticsearch.core.BulkRequest;
 import io.camunda.operate.exceptions.PersistenceException;
+import io.camunda.operate.schema.indices.DecisionIndex;
+import io.camunda.operate.schema.indices.DecisionRequirementsIndex;
 import io.camunda.operate.schema.indices.ProcessIndex;
+import io.camunda.operate.schema.templates.DecisionInstanceTemplate;
+import io.camunda.operate.schema.templates.ListViewTemplate;
 import io.camunda.operate.schema.templates.SequenceFlowTemplate;
 import io.camunda.operate.schema.templates.VariableTemplate;
 import io.camunda.operate.store.elasticsearch.NewElasticsearchBatchRequest;
@@ -22,9 +24,7 @@ import io.camunda.operate.util.ElasticsearchScriptBuilder;
 import io.camunda.zeebe.exporter.api.Exporter;
 import io.camunda.zeebe.exporter.api.context.Context;
 import io.camunda.zeebe.exporter.api.context.Controller;
-import io.camunda.zeebe.operate.exporter.handlers.ProcessHandler;
-import io.camunda.zeebe.operate.exporter.handlers.SequenceFlowHandler;
-import io.camunda.zeebe.operate.exporter.handlers.VariableHandler;
+import io.camunda.zeebe.operate.exporter.handlers.*;
 import io.camunda.zeebe.operate.exporter.util.XMLUtil;
 import io.camunda.zeebe.protocol.record.Record;
 import io.camunda.zeebe.protocol.record.RecordType;
@@ -46,6 +46,9 @@ public class OperateElasticsearchExporter implements Exporter {
 
   private long lastPosition = -1;
   private int batchSize;
+
+  // FIXME - must come from importStore.getConcurrencyMode()
+  private final boolean concurrencyMode = false;
 
   @Override
   public void configure(final Context context) {
@@ -158,18 +161,36 @@ public class OperateElasticsearchExporter implements Exporter {
         .withHandler(
             new SequenceFlowHandler(
                 (SequenceFlowTemplate) (new SequenceFlowTemplate().setIndexPrefix(indexPrefix))))
+        .withHandler(
+            new ListViewFlowNodeFromIncidentHandler(
+                (ListViewTemplate) new ListViewTemplate().setIndexPrefix(indexPrefix),
+                concurrencyMode))
+        .withHandler(
+            new ListViewFlowNodeFromJobHandler(
+                (ListViewTemplate) new ListViewTemplate().setIndexPrefix(indexPrefix),
+                concurrencyMode))
+        .withHandler(
+            new ListViewFlowNodeFromProcesInstanceHandler(
+                (ListViewTemplate) new ListViewTemplate().setIndexPrefix(indexPrefix),
+                concurrencyMode))
+        .withHandler(
+            new ListViewVariableFromVariableHandler(
+                (ListViewTemplate) new ListViewTemplate().setIndexPrefix(indexPrefix),
+                concurrencyMode))
         .build();
   }
 
   private static final class ElasticsearchRecordFilter implements Context.RecordFilter {
     private static final List<ValueType> VALUE_TYPES_2_IMPORT =
         List.of(
-            PROCESS, VARIABLE, PROCESS_INSTANCE
+            PROCESS,
+            VARIABLE,
+            PROCESS_INSTANCE,
             //            DECISION,
             //            DECISION_REQUIREMENTS,
             //            DECISION_EVALUATION,
-            //            JOB,
-            //            INCIDENT,
+            JOB,
+            INCIDENT
             //            VARIABLE_DOCUMENT,
             //            PROCESS_MESSAGE_SUBSCRIPTION,
             //            USER_TASK
